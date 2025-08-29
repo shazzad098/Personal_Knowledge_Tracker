@@ -1,7 +1,6 @@
-// middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
-exports.protectRoute = async (req, res, next) => {
+const protect = async (req, res, next) => {
     try {
         // Get token from header
         const authHeader = req.headers.authorization;
@@ -26,3 +25,5 @@ exports.protectRoute = async (req, res, next) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+module.exports = protect; // ✅ এটা ঠিক export

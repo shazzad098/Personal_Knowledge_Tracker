@@ -4,6 +4,9 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
+const noteRoutes = require('./routes/noteRoutes');
+const bookmarkRoutes = require('./routes/bookmarkRoutes');
+const todoRoutes = require('./routes/todoRoutes');
 
 const app = express();
 
@@ -13,6 +16,9 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/bookmarks', bookmarkRoutes);
+app.use('/api/todos', todoRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
