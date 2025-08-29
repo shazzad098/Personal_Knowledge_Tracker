@@ -1,9 +1,10 @@
 const Note = require('../models/noteModel');
 
-// GET /api/notes - All notes
+// GET /api/notes - All notes for logged-in user
 exports.getNotes = async (req, res) => {
     try {
-        const notes = await Note.find().sort({ createdAt: -1 });
+        // ✅ শুধুমাত্র লগিন করা ইউজারের নোট ফেচ করো
+        const notes = await Note.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json(notes);
     } catch (err) {
         console.error(err.message);
@@ -13,9 +14,13 @@ exports.getNotes = async (req, res) => {
 
 // POST /api/notes - Create new note
 exports.createNote = async (req, res) => {
-    const { title, content } = req.body;
+    const { title, content, category } = req.body;
 
-    // ✅ এখন JWT থেকে userId পাওয়া যাচ্ছে
+    // ✅ Check if user is logged in
+    if (!req.user) {
+        return res.status(401).json({ message: 'Not authenticated' });
+    }
+
     const userId = req.user.id;
 
     if (!title || !content) {
@@ -23,11 +28,18 @@ exports.createNote = async (req, res) => {
     }
 
     try {
-        const newNote = new Note({ title, content, userId });
+        let normalizedCategory = [];
+        if (Array.isArray(category)) {
+            normalizedCategory = category.filter(Boolean);
+        } else if (typeof category === 'string' && category.trim()) {
+            normalizedCategory = [category.trim()];
+        }
+
+        const newNote = new Note({ title, content, category: normalizedCategory, userId });
         const savedNote = await newNote.save();
         res.status(201).json(savedNote);
     } catch (err) {
-        console.error(err.message);
+        console.error('Create note error:', err);
         res.status(500).json({ message: 'Server Error' });
     }
 };
