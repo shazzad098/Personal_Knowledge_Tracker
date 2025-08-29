@@ -1,9 +1,10 @@
+// controllers/todoController.js
 const Todo = require('../models/todoModel');
 
-// GET /api/todos - All todos
+// GET /api/todos - Get all todos for the logged-in user
 exports.getTodos = async (req, res) => {
     try {
-        const todos = await Todo.find().sort({ createdAt: -1 });
+        const todos = await Todo.find({ userId: req.user.id }).sort({ createdAt: -1 });
         res.status(200).json(todos);
     } catch (err) {
         console.error(err.message);
@@ -11,16 +12,17 @@ exports.getTodos = async (req, res) => {
     }
 };
 
-// POST /api/todos - Create todo
+// POST /api/todos - Create a new todo
 exports.createTodo = async (req, res) => {
     const { text } = req.body;
+    const userId = req.user.id;
 
     if (!text) {
         return res.status(400).json({ message: 'Todo text is required' });
     }
 
     try {
-        const newTodo = new Todo({ text });
+        const newTodo = new Todo({ text, userId });
         const savedTodo = await newTodo.save();
         res.status(201).json(savedTodo);
     } catch (err) {
@@ -29,19 +31,21 @@ exports.createTodo = async (req, res) => {
     }
 };
 
-// PATCH /api/todos/:id - Update todo
+// PATCH /api/todos/:id - Update a todo
 exports.updateTodo = async (req, res) => {
     const { id } = req.params;
-    const { text, completed } = req.body;
+    const updates = req.body;
+    const userId = req.user.id;
 
     try {
-        const todo = await Todo.findById(id);
+        const todo = await Todo.findOne({ _id: id, userId });
         if (!todo) {
             return res.status(404).json({ message: 'Todo not found' });
         }
 
-        if (text) todo.text = text;
-        if (completed !== undefined) todo.completed = completed;
+        // Update fields if provided
+        if (updates.text !== undefined) todo.text = updates.text;
+        if (updates.completed !== undefined) todo.completed = updates.completed;
 
         const updatedTodo = await todo.save();
         res.status(200).json(updatedTodo);
@@ -54,17 +58,18 @@ exports.updateTodo = async (req, res) => {
     }
 };
 
-// DELETE /api/todos/:id - Delete todo
+// DELETE /api/todos/:id - Delete a todo
 exports.deleteTodo = async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.id;
 
     try {
-        const todo = await Todo.findById(id);
+        const todo = await Todo.findOne({ _id: id, userId });
         if (!todo) {
             return res.status(404).json({ message: 'Todo not found' });
         }
 
-        await Todo.findByIdAndDelete(id);
+        await Todo.deleteOne({ _id: id, userId }); // Use deleteOne for better clarity
         res.status(200).json({ message: 'Todo deleted successfully' });
     } catch (err) {
         console.error(err.message);

@@ -16,7 +16,7 @@ exports.createNote = async (req, res) => {
     const { title, content } = req.body;
 
     // ✅ এখন JWT থেকে userId পাওয়া যাচ্ছে
-    const userId = req.user.userId; // ✅ userId নামে আছে
+    const userId = req.user.id;
 
     if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
